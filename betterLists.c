@@ -10,6 +10,9 @@
 int inputSnake[100] = {0};
 int inputIndex = 0;
 
+int solve();
+int globLength=0;
+
 void readInput(){
     char ch, file_name[25];
     FILE *fp;
@@ -85,6 +88,7 @@ void printListRev(){
 
 void push(int offsetX, int offsetY, int offsetZ, int newType, int newFacing) {
    //create a link
+   globLength++;
    inputIndex++;
    struct node *link = (struct node*) malloc(sizeof(struct node));
 	
@@ -128,18 +132,15 @@ bool isEmpty() {
 }
 
 int length() {
-   int length = 0;
-   struct node *current;
+
 	
-   for(current = head; current != NULL; current = current->next) {
-      length++;
-   }
-	
-   return length;
+   return globLength;
 }
+
 
 void pop(){
    inputIndex--;
+   globLength--;
    struct node *temp = deleteFirst();
 }
 
@@ -211,7 +212,14 @@ int checkIfWouldOutOfBounds(int extraX, int extraY, int extraZ){
    return tmp;
 }
 
-int solve(int incr){
+int tryToPush(struct node* stack, int pushX, int pushY, int pushZ, int heading, int blockType){
+   if(!(checkIfOccupied(stack->curX+pushX, stack->curY+pushY, stack->curZ+pushZ) || checkIfWouldOutOfBounds(pushX,pushY,pushZ))){
+      push(pushX,pushY,pushZ,blockType,heading); //Neuer Block 
+      solve();
+   }
+}
+
+int solve(){
    struct node *ptr = head;
 
    int currentBlock = inputSnake[inputIndex];
@@ -226,255 +234,67 @@ int solve(int incr){
    if(head->type==1){//striaght block
       switch(head->facing){
          case 1:
-            if(!(checkIfOccupied(ptr->curX, ptr->curY, ptr->curZ+1) || checkIfWouldOutOfBounds(0,0,1))){ //falls frei ist und nicht zu groß wird
-            push(0,0,1,currentBlock,head->facing); //Neuer Block nach oben
-            #ifdef DEBUG
-            printf("z+ ");
-            #endif
-            solve(incr);
-            }
+            tryToPush(ptr, 0, 0, 1, head->facing, currentBlock);
          break;
          case 2:
-            if(!(checkIfOccupied(ptr->curX, ptr->curY+1, ptr->curZ) || checkIfWouldOutOfBounds(0,1,0))){
-            push(0,1,0,currentBlock,head->facing); //Neuer Block nach vorne
-            #ifdef DEBUG
-            printf("y+ ");
-            #endif
-            solve(incr);
-            }
+            tryToPush(ptr, 0, 1, 0, head->facing, currentBlock);
          break;
          case 3:
-            if(!(checkIfOccupied(ptr->curX+1, ptr->curY, ptr->curZ) || checkIfWouldOutOfBounds(1,0,0))){
-            push(1,0,0,currentBlock,head->facing); //Neuer Block nach rechts
-            #ifdef DEBUG
-            printf("x+ ");
-            #endif
-            solve(incr);
-            }
+            tryToPush(ptr, 1, 0, 0, head->facing, currentBlock);
          break;
          case 4:
-            if(!(checkIfOccupied(ptr->curX, ptr->curY, ptr->curZ-1) || checkIfWouldOutOfBounds(0,0,-1))){
-            push(0,0,-1,currentBlock,head->facing); //Neuer Block nach unten
-            #ifdef DEBUG
-            printf("z- ");
-            #endif
-            solve(incr);
-            }
+            tryToPush(ptr, 0, 0, -1, head->facing, currentBlock);
          break;
          case 5:
-            if(!(checkIfOccupied(ptr->curX, ptr->curY-1, ptr->curZ) || checkIfWouldOutOfBounds(0,-1,0))){
-            push(0,-1,0,currentBlock,head->facing); //Neuer Block nach hinten
-            #ifdef DEBUG
-            printf("y- ");
-            #endif
-            solve(incr);
-            }
+            tryToPush(ptr, 0, -1, 0, head->facing, currentBlock);
          break;
          case 6:
-            if(!(checkIfOccupied(ptr->curX-1, ptr->curY, ptr->curZ) || checkIfWouldOutOfBounds(-1,0,0))){
-            push(-1,0,0,currentBlock,head->facing); //Neuer Block nach links
-            #ifdef DEBUG
-            printf("x- ");
-            #endif
-            solve(incr);
-            }
+            tryToPush(ptr, -1, 0, 0, head->facing, currentBlock);
          break;
-         
       }
    }else if(head->type==2){
       switch(head->facing){
          case 1:
-            if(!(checkIfOccupied(ptr->curX, ptr->curY+1, ptr->curZ) || checkIfWouldOutOfBounds(0,1,0))){ //2
-               push(0,1,0,currentBlock,2); //Neuer Block nach vorne
-               #ifdef DEBUG
-               printf("y+ ");
-               #endif
-               solve(incr);
-            }
-    
-            if(!(checkIfOccupied(ptr->curX+1, ptr->curY, ptr->curZ) || checkIfWouldOutOfBounds(1,0,0))){ //3
-               push(1,0,0,currentBlock,3); //Neuer Block nach rechts
-               #ifdef DEBUG
-               printf("x+ ");
-               #endif
-               solve(incr);
-            }
-     
-            if(!(checkIfOccupied(ptr->curX, ptr->curY-1, ptr->curZ) || checkIfWouldOutOfBounds(0,-1,0))){ //5
-               push(0,-1,0,currentBlock,5); //Neuer Block nach hinten
-               #ifdef DEBUG
-               printf("y- ");
-               #endif
-               solve(incr);
-            }
-     
-            if(!(checkIfOccupied(ptr->curX-1, ptr->curY, ptr->curZ) || checkIfWouldOutOfBounds(-1,0,0))){ //6
-               push(-1,0,0,currentBlock,6); //Neuer Block nach links
-               #ifdef DEBUG
-               printf("x- ");
-               #endif
-               solve(incr);
-            }
+            tryToPush(ptr, 0, 1, 0, 2, currentBlock);
+            tryToPush(ptr, 1, 0, 0, 3, currentBlock);
+            tryToPush(ptr, 0, -1, 0, 5, currentBlock);
+            tryToPush(ptr, -1, 0, 0, 6, currentBlock);
          break;
          case 2:
-            if(!(checkIfOccupied(ptr->curX, ptr->curY, ptr->curZ+1) || checkIfWouldOutOfBounds(0,0,1))){ //1
-               push(0,0,1,currentBlock,1); //Neuer Block nach oben
-               #ifdef DEBUG
-               printf("z+ ");
-               #endif
-               solve(incr);}
-     
-            if(!(checkIfOccupied(ptr->curX+1, ptr->curY, ptr->curZ) || checkIfWouldOutOfBounds(1,0,0))){ //3
-               push(1,0,0,currentBlock,3); //Neuer Block nach rechts
-               #ifdef DEBUG
-               printf("x+ ");
-               #endif
-               solve(incr);}
-     
-            if(!(checkIfOccupied(ptr->curX, ptr->curY, ptr->curZ-1) || checkIfWouldOutOfBounds(0,0,-1))){ //4
-               push(0,0,-1,currentBlock,4); //Neuer Block nach unten
-               #ifdef DEBUG
-               printf("z- ");
-               #endif
-               solve(incr);}
-     
-            if(!(checkIfOccupied(ptr->curX-1, ptr->curY, ptr->curZ) || checkIfWouldOutOfBounds(-1,0,0))){ //6
-               push(-1,0,0,currentBlock,6); //Neuer Block nach links
-               #ifdef DEBUG
-               printf("x- ");
-               #endif
-               solve(incr);}
+            tryToPush(ptr, 0, 0, 1, 1, currentBlock);
+            tryToPush(ptr, 1, 0, 0, 3, currentBlock);
+            tryToPush(ptr, 0, 0, -1, 4, currentBlock);
+            tryToPush(ptr, -1, 0, 0, 6, currentBlock);
          break;
          case 3:
-            if(!(checkIfOccupied(ptr->curX, ptr->curY, ptr->curZ+1) || checkIfWouldOutOfBounds(0,0,1))){ //1
-               push(0,0,1,currentBlock,1); //Neuer Block nach oben
-               #ifdef DEBUG
-               printf("z+ ");
-               #endif
-               solve(incr);}
-     
-            if(!(checkIfOccupied(ptr->curX, ptr->curY+1, ptr->curZ) || checkIfWouldOutOfBounds(0,1,0))){ //2
-               push(0,1,0,currentBlock,2); //Neuer Block nach vorne
-               #ifdef DEBUG
-               printf("y+ ");
-               #endif
-               solve(incr);}
-    
-
-            if(!(checkIfOccupied(ptr->curX, ptr->curY, ptr->curZ-1) || checkIfWouldOutOfBounds(0,0,-1))){ //4
-               push(0,0,-1,currentBlock,4); //Neuer Block nach unten
-               #ifdef DEBUG
-               printf("z- ");
-               #endif
-               solve(incr);}
-     
-            if(!(checkIfOccupied(ptr->curX, ptr->curY-1, ptr->curZ) || checkIfWouldOutOfBounds(0,-1,0))){ //5
-               push(0,-1,0,currentBlock,5); //Neuer Block nach hinten
-               #ifdef DEBUG
-               printf("y- ");
-               #endif
-               solve(incr);}
-     
-
+            tryToPush(ptr, 0, 0, 1, 1, currentBlock);
+            tryToPush(ptr, 0, 1, 0, 2, currentBlock);
+            tryToPush(ptr, 0, 0, -1, 4, currentBlock);
+            tryToPush(ptr, 0, -1, 0, 5, currentBlock);
          break;
          case 4:
-            if(!(checkIfOccupied(ptr->curX, ptr->curY+1, ptr->curZ) || checkIfWouldOutOfBounds(0,1,0))){ //2
-               push(0,1,0,currentBlock,2); //Neuer Block nach vorne
-               #ifdef DEBUG
-               printf("y+ ");
-               #endif
-               solve(incr);}
-    
-            if(!(checkIfOccupied(ptr->curX+1, ptr->curY, ptr->curZ) || checkIfWouldOutOfBounds(1,0,0))){ //3
-               push(1,0,0,currentBlock,3); //Neuer Block nach rechts
-               #ifdef DEBUG
-               printf("x+ ");
-               #endif
-               solve(incr);}
-     
-
-            if(!(checkIfOccupied(ptr->curX, ptr->curY-1, ptr->curZ) || checkIfWouldOutOfBounds(0,-1,0))){ //5
-               push(0,-1,0,currentBlock,5); //Neuer Block nach hinten
-               #ifdef DEBUG
-               printf("y- ");
-               #endif
-               solve(incr);}
-     
-            if(!(checkIfOccupied(ptr->curX-1, ptr->curY, ptr->curZ) || checkIfWouldOutOfBounds(-1,0,0))){ //6
-               push(-1,0,0,currentBlock,6); //Neuer Block nach links
-               #ifdef DEBUG
-               printf("x- ");
-               #endif
-               solve(incr);}
+            tryToPush(ptr, 0, 1, 0, 2, currentBlock);
+            tryToPush(ptr, 1, 0, 0, 3, currentBlock);
+            tryToPush(ptr, 0, -1, 0, 5, currentBlock);
+            tryToPush(ptr, -1, 0, 0, 6, currentBlock);
          break;
          case 5:
-            if(!(checkIfOccupied(ptr->curX, ptr->curY, ptr->curZ+1) || checkIfWouldOutOfBounds(0,0,1))){ //1
-               push(0,0,1,currentBlock,1); //Neuer Block nach oben
-               #ifdef DEBUG
-               printf("z+ ");
-               #endif
-               solve(incr);}
-     
-
-            if(!(checkIfOccupied(ptr->curX+1, ptr->curY, ptr->curZ) || checkIfWouldOutOfBounds(1,0,0))){ //3
-               push(1,0,0,currentBlock,3); //Neuer Block nach rechts
-               #ifdef DEBUG
-               printf("x+ ");
-               #endif
-               solve(incr);}
-     
-            if(!(checkIfOccupied(ptr->curX, ptr->curY, ptr->curZ-1) || checkIfWouldOutOfBounds(0,0,-1))){ //4
-               push(0,0,-1,currentBlock,4); //Neuer Block nach unten
-               #ifdef DEBUG
-               printf("z- ");
-               #endif
-               solve(incr);}
-     
-
-            if(!(checkIfOccupied(ptr->curX-1, ptr->curY, ptr->curZ) || checkIfWouldOutOfBounds(-1,0,0))){ //6
-               push(-1,0,0,currentBlock,6); //Neuer Block nach links
-               #ifdef DEBUG
-               printf("x- ");
-               #endif
-               solve(incr);}
+            tryToPush(ptr, 0, 0, 1, 1, currentBlock);
+            tryToPush(ptr, 1, 0, 0, 3, currentBlock);
+            tryToPush(ptr, 0, 0, -1, 4, currentBlock);
+            tryToPush(ptr, -1, 0, 0, 6, currentBlock);
          break;
          case 6:
-            if(!(checkIfOccupied(ptr->curX, ptr->curY, ptr->curZ+1) || checkIfWouldOutOfBounds(0,0,1))){ //1
-               push(0,0,1,currentBlock,1); //Neuer Block nach oben
-               #ifdef DEBUG
-               printf("z+ ");
-               #endif
-               solve(incr);}
-     
-            if(!(checkIfOccupied(ptr->curX, ptr->curY+1, ptr->curZ) || checkIfWouldOutOfBounds(0,1,0))){ //2
-               push(0,1,0,currentBlock,2); //Neuer Block nach vorne
-               #ifdef DEBUG
-               printf("y+ ");
-               #endif
-               solve(incr);}
-    
-
-            if(!(checkIfOccupied(ptr->curX, ptr->curY, ptr->curZ-1) || checkIfWouldOutOfBounds(0,0,-1))){ //4
-               push(0,0,-1,currentBlock,4); //Neuer Block nach unten
-               #ifdef DEBUG
-               printf("z- ");
-               #endif
-               solve(incr);}
-     
-            if(!(checkIfOccupied(ptr->curX, ptr->curY-1, ptr->curZ) || checkIfWouldOutOfBounds(0,-1,0))){ //5
-               push(0,-1,0,currentBlock,5); //Neuer Block nach hinten
-               #ifdef DEBUG
-               printf("y- ");
-               #endif
-               solve(incr);}
-     
-
+            tryToPush(ptr, 0, 0, 1, 1, currentBlock);
+            tryToPush(ptr, 0, 1, 0, 2, currentBlock);
+            tryToPush(ptr, 0, 0, -1, 4, currentBlock);
+            tryToPush(ptr, 0, -1, 0, 5, currentBlock);
          break;
       }
 
    }
    
-   if(length()!=VOLOUM){
+   if(globLength!=VOLOUM){
       //inputIndex--;
       pop();
       #ifdef DEBUG
