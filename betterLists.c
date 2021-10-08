@@ -50,10 +50,17 @@ struct node{
    int curX;
    int curY;
    int curZ;
+   int minSizeX;
+   int minSizeY;
+   int minSizeZ;
+
+   int maxSizeX;
+   int maxSizeY;
+   int maxSizeZ;
    int index;
    int type; //1=straigt 2=corner
    int facing;
-   
+
    struct node *next;
 };
 
@@ -63,7 +70,7 @@ struct node *current = NULL;
 void printList() {
    struct node *ptr = head;
    while(ptr != NULL) {
-      printf("Index: %d    X: %d  Y: %d  Z: %d  Type: %d  Facing: %d \n",ptr->index, ptr->curX, ptr-> curY, ptr->curZ, ptr->type, ptr->facing);
+      printf("Index: %d    X: %d  Y: %d  Z: %d  Type: %d  Facing: %d Max#MinSizeX: %d#%d Max#MinSizeX: %d#%d Max#MinSizeX: %d#%d\n",ptr->index, ptr->curX, ptr-> curY, ptr->curZ, ptr->type, ptr->facing, ptr->maxSizeX, ptr->minSizeX, ptr->maxSizeY, ptr->minSizeY, ptr->maxSizeZ, ptr->minSizeZ);
       ptr = ptr->next;
    }
 }
@@ -100,16 +107,40 @@ void push(int offsetX, int offsetY, int offsetZ, int newType, int newFacing) {
       link->curX = ORIGEN;
       link->curY = ORIGEN;
       link->curZ = ORIGEN;
+      link->maxSizeX = 0;
+      link->maxSizeY = 0;
+      link->maxSizeZ = 0;
+
+      link->minSizeX = 0;
+      link->minSizeY = 0;
+      link->minSizeZ = 0;
+
       space[ORIGEN][ORIGEN][ORIGEN]=1;
    }else{
       link->index = head->index+1;
+
       link->curX = head->curX+offsetX;
       link->curY = head->curY+offsetY;
       link->curZ = head->curZ+offsetZ;
+
+
+      if(link->curX < head->minSizeX){link->minSizeX = link->curX;}else{link->minSizeX = head->minSizeX;}
+      if(link->curX > head->maxSizeX){link->maxSizeX = link->curX;}else{link->maxSizeX = head->maxSizeX;}
+
+      if(link->curY < head->minSizeY){link->minSizeY = link->curY;}else{link->minSizeY = head->minSizeY;}
+      if(link->curY > head->maxSizeY){link->maxSizeY = link->curY;}else{link->maxSizeY = head->maxSizeY;}
+
+      if(link->curZ < head->minSizeZ){link->minSizeZ = link->curZ;}else{link->minSizeZ = head->minSizeZ;}
+      if(link->curZ > head->maxSizeZ){link->maxSizeZ = link->curZ;}else{link->maxSizeZ = head->maxSizeZ;}
+
+    
+
+
       space[head->curX+offsetX][head->curY+offsetY][head->curZ+offsetZ]=1;
    }
    link->type = newType;
    link->facing = newFacing;
+
 
 	
    //point it to old first node
@@ -155,30 +186,17 @@ int checkIfOccupied(int x, int y, int z){
 }
 
 int checkIfOutOfBounds(int boundX, int boundY, int boundZ){
-
-   int minX=ORIGEN;
-   int maxX=ORIGEN;
-
-   int minY=ORIGEN;
-   int maxY=ORIGEN;
-    
-   int minZ=ORIGEN;
-   int maxZ=ORIGEN;
-
    struct node *ptr = head;
-   while(ptr != NULL) {
-      if(ptr->curX < minX){minX = ptr->curX;}
-      if(ptr->curX > maxX){maxX = ptr->curX;}
 
-      if(ptr->curY < minY){minY = ptr->curY;}
-      if(ptr->curY > maxY){maxY = ptr->curY;}
+   int minX=ptr->minSizeX;
+   int maxX=ptr->maxSizeX;
 
-      if(ptr->curZ < minZ){minZ = ptr->curZ;}
-      if(ptr->curZ > maxZ){maxZ = ptr->curZ;}
-
-      ptr = ptr->next;
-   }
+   int minY=ptr->minSizeY;
+   int maxY=ptr->maxSizeY;
     
+   int minZ=ptr->minSizeZ;
+   int maxZ=ptr->maxSizeZ;
+
    int diffX=0;
    if(minX>maxX){diffX=minX-maxX+1;}else{diffX=maxX-minX+1;}
 
@@ -187,6 +205,7 @@ int checkIfOutOfBounds(int boundX, int boundY, int boundZ){
 
    int diffZ=0;
    if(minZ>maxZ){diffZ=minZ-maxZ+1;}else{diffZ=maxZ-minZ+1;}
+
    #ifdef DEBUG
    /*
    printf("minX: %d   maxX: %d   size: %d   maxSize: %d\n",minX, maxX, diffX, boundX);
@@ -305,13 +324,14 @@ int solve(){
 
    return 0;
 
-        
+
 }
 
 
 int main() {
    readInput();
    push(0,0,0,1,1);
+
    inputIndex=1;
    solve(1);
    printf("\n\n\n");
