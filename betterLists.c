@@ -150,6 +150,7 @@ void pop(){
 
 int checkIfOccupied(int x, int y, int z){
    return space[x][y][z];
+
 }
 
 int checkIfOutOfBounds(int boundX, int boundY, int boundZ){
@@ -307,7 +308,7 @@ int solve(){
 }
 
 
-void main() {
+int main() {
    readInput();
    push(0,0,0,1,1);
    inputIndex=1;
@@ -317,5 +318,5 @@ void main() {
    printf("bounds: %d\n",checkIfOutOfBounds(BOUNDS,BOUNDS,BOUNDS));
    printf("indexCounter: %d",inputIndex);
   
-   
+   return 0;
 }
