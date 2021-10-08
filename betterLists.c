@@ -7,6 +7,8 @@
 #define BOUNDS 4
 #define VOLOUM BOUNDS*BOUNDS*BOUNDS
 
+int space[BOUNDS][BOUNDS][BOUNDS]={0};
+
 int inputSnake[100] = {0};
 int inputIndex = 0;
 
@@ -97,12 +99,13 @@ void push(int offsetX, int offsetY, int offsetZ, int newType, int newFacing) {
       link->curX = ORIGEN;
       link->curY = ORIGEN;
       link->curZ = ORIGEN;
+      space[ORIGEN][ORIGEN][ORIGEN]=1;
    }else{
       link->index = head->index+1;
       link->curX = head->curX+offsetX;
       link->curY = head->curY+offsetY;
       link->curZ = head->curZ+offsetZ;
-
+      space[head->curX+offsetX][head->curY+offsetY][head->curZ+offsetZ]=1;
    }
    link->type = newType;
    link->facing = newFacing;
@@ -116,6 +119,7 @@ void push(int offsetX, int offsetY, int offsetZ, int newType, int newFacing) {
 }
 
 struct node* deleteFirst() {
+   space[head->curX][head->curY][head->curZ]=0;
 
    //save reference to first link
    struct node *tempLink = head;
@@ -145,15 +149,7 @@ void pop(){
 }
 
 int checkIfOccupied(int x, int y, int z){
-   struct node *ptr = head;
-   while(ptr != NULL) {
-      if(x == ptr->curX && y == ptr->curY && z == ptr->curZ){
-        //printf("oc\n");
-        return 1;
-      }
-      ptr = ptr->next;
-   }
-   return 0;
+   return space[x][y][z];
 }
 
 int checkIfOutOfBounds(int boundX, int boundY, int boundZ){
@@ -194,7 +190,7 @@ int checkIfOutOfBounds(int boundX, int boundY, int boundZ){
    printf("minX: %d   maxX: %d   size: %d   maxSize: %d\n",minX, maxX, diffX, boundX);
    printf("minY: %d   maxY: %d   size: %d   maxSize: %d\n",minY, maxY, diffY, boundY);
    printf("minZ: %d   maxZ: %d   size: %d   maxSize: %d\n\n",minZ, maxZ, diffZ, boundZ);
-   */
+   */ 
    #endif
    if(diffX > boundX || diffY > boundY || diffZ > boundZ){
       //printf("Out of bounds\n\n\n");
