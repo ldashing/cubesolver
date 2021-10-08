@@ -190,9 +190,11 @@ int checkIfOutOfBounds(int boundX, int boundY, int boundZ){
    int diffZ=0;
    if(minZ>maxZ){diffZ=minZ-maxZ+1;}else{diffZ=maxZ-minZ+1;}
    #ifdef DEBUG
+   /*
    printf("minX: %d   maxX: %d   size: %d   maxSize: %d\n",minX, maxX, diffX, boundX);
    printf("minY: %d   maxY: %d   size: %d   maxSize: %d\n",minY, maxY, diffY, boundY);
    printf("minZ: %d   maxZ: %d   size: %d   maxSize: %d\n\n",minZ, maxZ, diffZ, boundZ);
+   */
    #endif
    if(diffX > boundX || diffY > boundY || diffZ > boundZ){
       //printf("Out of bounds\n\n\n");
