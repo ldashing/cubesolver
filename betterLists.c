@@ -53,6 +53,7 @@ struct node{
    int index;
    int type; //1=straigt 2=corner
    int facing;
+   
    struct node *next;
 };
 
