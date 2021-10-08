@@ -2,6 +2,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <omp.h>
+
 
 #define ORIGEN 0
 #define BOUNDS 4
@@ -214,16 +216,7 @@ int checkIfOutOfBounds(int boundX, int boundY, int boundZ){
 }
 
 int checkIfWouldOutOfBounds(int extraX, int extraY, int extraZ){
-/*
-   struct node *ptr = head;
 
-   if(ptr->diffX+extraX > BOUNDS || ptr->diffY+extraY > BOUNDS || ptr->diffZ+extraZ > BOUNDS){
-      printf("Out of bounds\n\n\n");
-      return 1;
-   }
-   return 0;
-   */
-   
    push(extraX,extraY,extraZ,66,66);
    int tmp = checkIfOutOfBounds(BOUNDS,BOUNDS,BOUNDS);
    pop();
@@ -231,6 +224,7 @@ int checkIfWouldOutOfBounds(int extraX, int extraY, int extraZ){
      // printf("wouldbeout\n");
    }
    return tmp;
+
    
 }
 
@@ -243,7 +237,7 @@ int tryToPush(struct node* stack, int pushX, int pushY, int pushZ, int heading, 
 
 int solve(){
    struct node *ptr = head;
-         //printf("Index: %d    X: %d  Y: %d  Z: %d  Type: %d  Facing: %d diffx#y#z %d#%d#%d\n",ptr->index, ptr->curX, ptr-> curY, ptr->curZ, ptr->type, ptr->facing, ptr->diffX, ptr->diffY, ptr->diffZ);
+       //  printf("Index: %d    X: %d  Y: %d  Z: %d  Type: %d  Facing: %d diffx#y#z %d#%d#%d\n",ptr->index, ptr->curX, ptr-> curY, ptr->curZ, ptr->type, ptr->facing, ptr->diffX, ptr->diffY, ptr->diffZ);
 
 
    int currentBlock = inputSnake[inputIndex];
@@ -338,7 +332,10 @@ int main() {
    push(0,0,0,1,1);
 
    inputIndex=1;
-   solve(1);
+   //#pragma omp parallel{
+      solve(1);
+   //}
+   
    printf("\n\n\n");
    printListRev();
    printf("bounds: %d\n",checkIfOutOfBounds(BOUNDS,BOUNDS,BOUNDS));
