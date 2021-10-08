@@ -50,6 +50,7 @@ struct node{
    int curX;
    int curY;
    int curZ;
+   
    int minSizeX;
    int minSizeY;
    int minSizeZ;
@@ -57,6 +58,11 @@ struct node{
    int maxSizeX;
    int maxSizeY;
    int maxSizeZ;
+   
+   int diffX;
+   int diffY;
+   int diffZ;
+
    int index;
    int type; //1=straigt 2=corner
    int facing;
@@ -70,7 +76,8 @@ struct node *current = NULL;
 void printList() {
    struct node *ptr = head;
    while(ptr != NULL) {
-      printf("Index: %d    X: %d  Y: %d  Z: %d  Type: %d  Facing: %d Max#MinSizeX: %d#%d Max#MinSizeX: %d#%d Max#MinSizeX: %d#%d\n",ptr->index, ptr->curX, ptr-> curY, ptr->curZ, ptr->type, ptr->facing, ptr->maxSizeX, ptr->minSizeX, ptr->maxSizeY, ptr->minSizeY, ptr->maxSizeZ, ptr->minSizeZ);
+      //printf("Index: %d    X: %d  Y: %d  Z: %d  Type: %d  Facing: %d Max#MinSizeX: %d#%d Max#MinSizeX: %d#%d Max#MinSizeX: %d#%d diffx#y#z %d#%d#%d\n",ptr->index, ptr->curX, ptr-> curY, ptr->curZ, ptr->type, ptr->facing, ptr->maxSizeX, ptr->minSizeX, ptr->maxSizeY, ptr->minSizeY, ptr->maxSizeZ, ptr->minSizeZ, ptr->diffX, ptr->diffY, ptr->diffZ);
+      printf("Index: %d    X: %d  Y: %d  Z: %d  Type: %d  Facing: %d diffx#y#z %d#%d#%d\n",ptr->index, ptr->curX, ptr-> curY, ptr->curZ, ptr->type, ptr->facing, ptr->diffX, ptr->diffY, ptr->diffZ);
       ptr = ptr->next;
    }
 }
@@ -107,6 +114,11 @@ void push(int offsetX, int offsetY, int offsetZ, int newType, int newFacing) {
       link->curX = ORIGEN;
       link->curY = ORIGEN;
       link->curZ = ORIGEN;
+
+      link->diffX=0;
+      link->diffY=0;
+      link->diffZ=0;
+      
       link->maxSizeX = 0;
       link->maxSizeY = 0;
       link->maxSizeZ = 0;
@@ -114,6 +126,7 @@ void push(int offsetX, int offsetY, int offsetZ, int newType, int newFacing) {
       link->minSizeX = 0;
       link->minSizeY = 0;
       link->minSizeZ = 0;
+      
 
       space[ORIGEN][ORIGEN][ORIGEN]=1;
    }else{
@@ -133,6 +146,9 @@ void push(int offsetX, int offsetY, int offsetZ, int newType, int newFacing) {
       if(link->curZ < head->minSizeZ){link->minSizeZ = link->curZ;}else{link->minSizeZ = head->minSizeZ;}
       if(link->curZ > head->maxSizeZ){link->maxSizeZ = link->curZ;}else{link->maxSizeZ = head->maxSizeZ;}
 
+      link->diffX=abs(link->minSizeX-link->maxSizeX)+1;
+      link->diffY=abs(link->minSizeY-link->maxSizeY)+1;
+      link->diffZ=abs(link->minSizeZ-link->maxSizeZ)+1;
     
 
 
@@ -185,43 +201,29 @@ int checkIfOccupied(int x, int y, int z){
 
 }
 
+
+
 int checkIfOutOfBounds(int boundX, int boundY, int boundZ){
    struct node *ptr = head;
 
-   int minX=ptr->minSizeX;
-   int maxX=ptr->maxSizeX;
-
-   int minY=ptr->minSizeY;
-   int maxY=ptr->maxSizeY;
-    
-   int minZ=ptr->minSizeZ;
-   int maxZ=ptr->maxSizeZ;
-
-   int diffX=0;
-   if(minX>maxX){diffX=minX-maxX+1;}else{diffX=maxX-minX+1;}
-
-   int diffY=0;
-   if(minY>maxY){diffY=minY-maxY+1;}else{diffY=maxY-minY+1;}
-
-   int diffZ=0;
-   if(minZ>maxZ){diffZ=minZ-maxZ+1;}else{diffZ=maxZ-minZ+1;}
-
-   #ifdef DEBUG
-   /*
-   printf("minX: %d   maxX: %d   size: %d   maxSize: %d\n",minX, maxX, diffX, boundX);
-   printf("minY: %d   maxY: %d   size: %d   maxSize: %d\n",minY, maxY, diffY, boundY);
-   printf("minZ: %d   maxZ: %d   size: %d   maxSize: %d\n\n",minZ, maxZ, diffZ, boundZ);
-   */ 
-   #endif
-   if(diffX > boundX || diffY > boundY || diffZ > boundZ){
+   if(ptr->diffX > boundX || ptr->diffY > boundY || ptr->diffZ > boundZ){
       //printf("Out of bounds\n\n\n");
       return 1;
    }
-
    return 0;
 }
 
 int checkIfWouldOutOfBounds(int extraX, int extraY, int extraZ){
+/*
+   struct node *ptr = head;
+
+   if(ptr->diffX+extraX > BOUNDS || ptr->diffY+extraY > BOUNDS || ptr->diffZ+extraZ > BOUNDS){
+      printf("Out of bounds\n\n\n");
+      return 1;
+   }
+   return 0;
+   */
+   
    push(extraX,extraY,extraZ,66,66);
    int tmp = checkIfOutOfBounds(BOUNDS,BOUNDS,BOUNDS);
    pop();
@@ -229,6 +231,7 @@ int checkIfWouldOutOfBounds(int extraX, int extraY, int extraZ){
      // printf("wouldbeout\n");
    }
    return tmp;
+   
 }
 
 int tryToPush(struct node* stack, int pushX, int pushY, int pushZ, int heading, int blockType){
@@ -240,6 +243,8 @@ int tryToPush(struct node* stack, int pushX, int pushY, int pushZ, int heading, 
 
 int solve(){
    struct node *ptr = head;
+         //printf("Index: %d    X: %d  Y: %d  Z: %d  Type: %d  Facing: %d diffx#y#z %d#%d#%d\n",ptr->index, ptr->curX, ptr-> curY, ptr->curZ, ptr->type, ptr->facing, ptr->diffX, ptr->diffY, ptr->diffZ);
+
 
    int currentBlock = inputSnake[inputIndex];
 
