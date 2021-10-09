@@ -229,7 +229,7 @@ int checkIfWouldOutOfBounds(int extraX, int extraY, int extraZ){
 }
 
 int tryToPush(struct node* stack, int pushX, int pushY, int pushZ, int heading, int blockType){
-   if(!(checkIfOccupied(stack->curX+pushX, stack->curY+pushY, stack->curZ+pushZ) || checkIfWouldOutOfBounds(pushX,pushY,pushZ))){
+   if(!(checkIfOccupied(stack->curX+pushX, stack->curY+pushY, stack->curZ+pushZ))){
       push(pushX,pushY,pushZ,blockType,heading); //Neuer Block 
       solve();
    }
@@ -238,35 +238,48 @@ int tryToPush(struct node* stack, int pushX, int pushY, int pushZ, int heading, 
 int solve(){
    struct node *ptr = head;
        //  printf("Index: %d    X: %d  Y: %d  Z: %d  Type: %d  Facing: %d diffx#y#z %d#%d#%d\n",ptr->index, ptr->curX, ptr-> curY, ptr->curZ, ptr->type, ptr->facing, ptr->diffX, ptr->diffY, ptr->diffZ);
+   if(checkIfOutOfBounds(BOUNDS,BOUNDS,BOUNDS)){
+      pop();
+      #ifdef DEBUG
+      printf("\b\b\b");
+      #endif
+      return 1;
 
+   }
 
    int currentBlock = inputSnake[inputIndex];
-
+/*
    if(inputSnake[inputIndex]==3){
       printf("end of input###############################################################");
       return 1;
    }
-   
+   */
    //printf("head facing: %d current index %d current block: %d\n", head->facing,inputIndex,inputSnake[inputIndex]);
    //inputIndex++;
    if(head->type==1){//striaght block
       switch(head->facing){
          case 1:
+            //if(head->diffZ+1>BOUNDS){return 1;}
             tryToPush(ptr, 0, 0, 1, head->facing, currentBlock);
          break;
          case 2:
+ //           if(head->diffY+1>BOUNDS){return 1;}
             tryToPush(ptr, 0, 1, 0, head->facing, currentBlock);
          break;
          case 3:
+   //         if(head->diffX+1>BOUNDS){return 1;}
             tryToPush(ptr, 1, 0, 0, head->facing, currentBlock);
          break;
          case 4:
+   //         if(head->diffZ+1>BOUNDS){return 1;}
             tryToPush(ptr, 0, 0, -1, head->facing, currentBlock);
          break;
          case 5:
+    //        if(head->diffY+1>BOUNDS){return 1;}
             tryToPush(ptr, 0, -1, 0, head->facing, currentBlock);
          break;
          case 6:
+     //       if(head->diffX+1>BOUNDS){return 1;}
             tryToPush(ptr, -1, 0, 0, head->facing, currentBlock);
          break;
       }
