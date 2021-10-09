@@ -236,7 +236,15 @@ int tryToPush(struct node* stack, int pushX, int pushY, int pushZ, int heading, 
 }
 
 int solve(){
+/*
+   if(globLength==VOLOUM){
+      printf("done");
+      return 0;
+   }
+   */
+
    struct node *ptr = head;
+
        //  printf("Index: %d    X: %d  Y: %d  Z: %d  Type: %d  Facing: %d diffx#y#z %d#%d#%d\n",ptr->index, ptr->curX, ptr-> curY, ptr->curZ, ptr->type, ptr->facing, ptr->diffX, ptr->diffY, ptr->diffZ);
    if(checkIfOutOfBounds(BOUNDS,BOUNDS,BOUNDS)){
       pop();
@@ -339,20 +347,43 @@ int solve(){
 
 }
 
+void printMoves(){
+   printf("\n");
+   reverse(&head);
+   struct node *ptr = head;
+   while(ptr->next != NULL) {
+      int xdiff = ptr->next->curX - ptr->curX;
+      int ydiff = ptr->next->curY - ptr->curY;
+      int zdiff = ptr->next->curZ - ptr->curZ;
+
+      if(xdiff==1){printf("x+ ");}
+      else if(xdiff==-1){printf("x- ");}
+      else if(ydiff==1){printf("y+ ");}
+      else if(ydiff==-1){printf("y- ");}
+      else if(zdiff==1){printf("z+ ");}
+      else if(zdiff==-1){printf("z- ");}
+      //printf("xdiff: %d\n",xdiff);
+
+      //printf("Index: %d    X: %d  Y: %d  Z: %d  Type: %d  Facing: %d Max#MinSizeX: %d#%d Max#MinSizeX: %d#%d Max#MinSizeX: %d#%d diffx#y#z %d#%d#%d\n",ptr->index, ptr->curX, ptr-> curY, ptr->curZ, ptr->type, ptr->facing, ptr->maxSizeX, ptr->minSizeX, ptr->maxSizeY, ptr->minSizeY, ptr->maxSizeZ, ptr->minSizeZ, ptr->diffX, ptr->diffY, ptr->diffZ);
+      //printf("Index: %d    X: %d  Y: %d  Z: %d  Type: %d  Facing: %d diffx#y#z %d#%d#%d\n",ptr->index, ptr->curX, ptr-> curY, ptr->curZ, ptr->type, ptr->facing, ptr->diffX, ptr->diffY, ptr->diffZ);
+      ptr = ptr->next;
+   }
+   reverse(&head);
+   printf("\n");
+
+
+}
 
 int main() {
    readInput();
    push(0,0,0,1,1);
 
    inputIndex=1;
-   //#pragma omp parallel{
-      solve(1);
-   //}
-   
+   solve();
    printf("\n\n\n");
-   printListRev();
-   printf("bounds: %d\n",checkIfOutOfBounds(BOUNDS,BOUNDS,BOUNDS));
-   printf("indexCounter: %d",inputIndex);
-  
+   //printListRev();
+   //printf("bounds: %d\n",checkIfOutOfBounds(BOUNDS,BOUNDS,BOUNDS));
+   //printf("indexCounter: %d",inputIndex);
+   printMoves();  
    return 0;
 }
