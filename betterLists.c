@@ -2,20 +2,30 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <omp.h>
 
 
-#define ORIGEN 0
+#define ORIGEN 10
 #define BOUNDS 4
 #define VOLOUM BOUNDS*BOUNDS*BOUNDS
 
-int space[BOUNDS][BOUNDS][BOUNDS]={0};
+
+int space[20][20][20]={0};
 
 int inputSnake[100] = {0};
 int inputIndex = 0;
 
 int solve();
 int globLength=0;
+
+unsigned long visitedNodes=0;
+
+int max(int num1, int num2){
+    return (num1 > num2 ) ? num1 : num2;
+}
+
+int min(int num1, int num2) {
+    return (num1 > num2 ) ? num2 : num1;
+}
 
 void readInput(){
     char ch, file_name[25];
@@ -105,8 +115,115 @@ void printListRev(){
    reverse(&head);
 }
 
+void pushX(int offset, int newType, int newFacing) {
+   visitedNodes++;
+   globLength++;
+   inputIndex++;
+   struct node *link = (struct node*) malloc(sizeof(struct node));
+	
+   link->index = head->index+1;
+
+   link->curX = head->curX+offset;
+   link->curY = head->curY;
+   link->curZ = head->curZ;
+      
+   link->minSizeX=min(link->curX,head->minSizeX);
+   link->maxSizeX=max(link->curX,head->maxSizeX);
+
+   link->minSizeY=head->minSizeY;
+   link->maxSizeY=head->maxSizeY;
+
+   link->minSizeZ=head->minSizeZ;
+   link->maxSizeZ=head->maxSizeZ;
+      
+
+   link->diffX=abs(link->minSizeX-link->maxSizeX)+1;
+   link->diffY=head->diffY;
+   link->diffZ=head->diffZ;
+    
+   space[head->curX+offset][head->curY][head->curZ]=1;
+   
+   link->type = newType;
+   link->facing = newFacing;
+
+   link->next = head;
+
+   head = link;
+}
+
+void pushY(int offset, int newType, int newFacing) {
+   visitedNodes++;
+   globLength++;
+   inputIndex++;
+   struct node *link = (struct node*) malloc(sizeof(struct node));
+
+   link->index = head->index+1;
+
+   link->curX = head->curX;
+   link->curY = head->curY+offset;
+   link->curZ = head->curZ;
+      
+   link->minSizeX=head->minSizeX;
+   link->maxSizeX=head->maxSizeX;
+
+   link->minSizeY=min(link->curY,head->minSizeY);
+   link->maxSizeY=max(link->curY,head->maxSizeY);
+
+   link->minSizeZ=head->minSizeZ;
+   link->maxSizeZ=head->maxSizeZ;
+      
+
+   link->diffX=head->diffX;
+   link->diffY=abs(link->minSizeY-link->maxSizeY)+1;
+   link->diffZ=head->diffZ;
+    
+   space[head->curX][head->curY+offset][head->curZ]=1;
+
+   link->type = newType;
+   link->facing = newFacing;
+
+   link->next = head;
+
+   head = link;
+}
+
+void pushZ(int offset, int newType, int newFacing) {
+   visitedNodes++;
+   globLength++;
+   inputIndex++;
+   struct node *link = (struct node*) malloc(sizeof(struct node));
+
+   link->index = head->index+1;
+
+   link->curX = head->curX;
+   link->curY = head->curY;
+   link->curZ = head->curZ+offset;
+      
+   link->minSizeX=head->minSizeX;
+   link->maxSizeX=head->maxSizeX;
+
+   link->minSizeY=head->minSizeY;
+   link->maxSizeY=head->maxSizeY;
+
+   link->minSizeZ=min(link->curZ,head->minSizeZ);
+   link->maxSizeZ=max(link->curZ,head->maxSizeZ);
+      
+
+   link->diffX=head->diffX;
+   link->diffY=head->diffY;
+   link->diffZ=abs(link->minSizeZ-link->maxSizeZ)+1;
+    
+   space[head->curX][head->curY][head->curZ+offset]=1;
+
+   link->type = newType;
+   link->facing = newFacing;
+
+   link->next = head;
+
+   head = link;
+}
+
 void push(int offsetX, int offsetY, int offsetZ, int newType, int newFacing) {
-   //create a link
    globLength++;
    inputIndex++;
    struct node *link = (struct node*) malloc(sizeof(struct node));
@@ -121,15 +238,14 @@ void push(int offsetX, int offsetY, int offsetZ, int newType, int newFacing) {
       link->diffY=0;
       link->diffZ=0;
       
-      link->maxSizeX = 0;
-      link->maxSizeY = 0;
-      link->maxSizeZ = 0;
+      link->maxSizeX = ORIGEN;
+      link->maxSizeY = ORIGEN;
+      link->maxSizeZ = ORIGEN;
 
-      link->minSizeX = 0;
-      link->minSizeY = 0;
-      link->minSizeZ = 0;
+      link->minSizeX = ORIGEN;
+      link->minSizeY = ORIGEN;
+      link->minSizeZ = ORIGEN;
       
-
       space[ORIGEN][ORIGEN][ORIGEN]=1;
    }else{
       link->index = head->index+1;
@@ -137,23 +253,21 @@ void push(int offsetX, int offsetY, int offsetZ, int newType, int newFacing) {
       link->curX = head->curX+offsetX;
       link->curY = head->curY+offsetY;
       link->curZ = head->curZ+offsetZ;
+      
+      link->minSizeX=min(link->curX,head->minSizeX);
+      link->maxSizeX=max(link->curX,head->maxSizeX);
 
+      link->minSizeY=min(link->curY,head->minSizeY);
+      link->maxSizeY=max(link->curY,head->maxSizeY);
 
-      if(link->curX < head->minSizeX){link->minSizeX = link->curX;}else{link->minSizeX = head->minSizeX;}
-      if(link->curX > head->maxSizeX){link->maxSizeX = link->curX;}else{link->maxSizeX = head->maxSizeX;}
-
-      if(link->curY < head->minSizeY){link->minSizeY = link->curY;}else{link->minSizeY = head->minSizeY;}
-      if(link->curY > head->maxSizeY){link->maxSizeY = link->curY;}else{link->maxSizeY = head->maxSizeY;}
-
-      if(link->curZ < head->minSizeZ){link->minSizeZ = link->curZ;}else{link->minSizeZ = head->minSizeZ;}
-      if(link->curZ > head->maxSizeZ){link->maxSizeZ = link->curZ;}else{link->maxSizeZ = head->maxSizeZ;}
+      link->minSizeZ=min(link->curZ,head->minSizeZ);
+      link->maxSizeZ=max(link->curZ,head->maxSizeZ);
+      
 
       link->diffX=abs(link->minSizeX-link->maxSizeX)+1;
       link->diffY=abs(link->minSizeY-link->maxSizeY)+1;
       link->diffZ=abs(link->minSizeZ-link->maxSizeZ)+1;
     
-
-
       space[head->curX+offsetX][head->curY+offsetY][head->curZ+offsetZ]=1;
    }
    link->type = newType;
@@ -181,16 +295,9 @@ struct node* deleteFirst() {
    return tempLink;
 }
 
-bool isEmpty() {
-   return head == NULL;
-}
-
-int length() {
-
-	
+int length() {	
    return globLength;
 }
-
 
 void pop(){
    inputIndex--;
@@ -200,32 +307,15 @@ void pop(){
 
 int checkIfOccupied(int x, int y, int z){
    return space[x][y][z];
-
 }
-
-
 
 int checkIfOutOfBounds(int boundX, int boundY, int boundZ){
    struct node *ptr = head;
 
    if(ptr->diffX > boundX || ptr->diffY > boundY || ptr->diffZ > boundZ){
-      //printf("Out of bounds\n\n\n");
       return 1;
    }
    return 0;
-}
-
-int checkIfWouldOutOfBounds(int extraX, int extraY, int extraZ){
-
-   push(extraX,extraY,extraZ,66,66);
-   int tmp = checkIfOutOfBounds(BOUNDS,BOUNDS,BOUNDS);
-   pop();
-   if(tmp){
-     // printf("wouldbeout\n");
-   }
-   return tmp;
-
-   
 }
 
 int tryToPush(struct node* stack, int pushX, int pushY, int pushZ, int heading, int blockType){
@@ -235,102 +325,141 @@ int tryToPush(struct node* stack, int pushX, int pushY, int pushZ, int heading, 
    }
 }
 
-int solve(){
-/*
-   if(globLength==VOLOUM){
-      printf("done");
+int tryToPushX(struct node* stack, int push, int heading, int blockType){
+   if(checkIfOccupied(stack->curX+push, stack->curY, stack->curZ)){
       return 0;
    }
-   */
+   if(head->diffX==BOUNDS){
+      if(head->curX+push > head->maxSizeX || head->curX+push < head->minSizeX){
+         //printf("wouldb \n");
+         return 0;
+      }
+      /*
+      if(blockType==1){
+         if(head->curX+push+push > head->maxSizeX || head->curX+push+push < head->minSizeX){
+           //printf("wouldb \n");
+            return 0;
+         }
+      }
+      */
+   }
+   pushX(push,blockType,heading); //Neuer Block 
+   solve();
+}
+
+int tryToPushY(struct node* stack, int push, int heading, int blockType){
+   if(checkIfOccupied(stack->curX, stack->curY+push, stack->curZ)){
+      return 0;
+   }
+   if(head->diffY==BOUNDS){
+      if(head->curY+push > head->maxSizeY || head->curY+push < head->minSizeY){
+         //printf("wouldb \n");
+         return 0;
+      }
+      /*
+      if(blockType==1){
+         if(head->curY+push+push > head->maxSizeY || head->curY+push+push < head->minSizeY){
+           //printf("wouldb \n");
+            return 0;
+         }
+      }
+      */
+   }
+   pushY(push,blockType,heading); //Neuer Block 
+   solve();
+}
+
+int tryToPushZ(struct node* stack, int push, int heading, int blockType){
+   if(checkIfOccupied(stack->curX, stack->curY, stack->curZ+push)){
+      return 0;
+   }
+   if(head->diffZ==BOUNDS){
+      if(head->curZ+push > head->maxSizeZ || head->curZ+push < head->minSizeZ){
+         //printf("wouldb \n");
+         return 0;
+      }
+      /*
+      if(blockType==1){
+         if(head->curZ+push+push > head->maxSizeZ || head->curZ+push+push < head->minSizeZ){
+           //printf("wouldb \n");
+            return 0;
+         }
+      }
+      */
+   }
+   pushZ(push,blockType,heading); //Neuer Block 
+   solve();
+}
+
+int solve(){
+   
+   if(globLength==VOLOUM){
+      return 0;
+   }
 
    struct node *ptr = head;
-
-       //  printf("Index: %d    X: %d  Y: %d  Z: %d  Type: %d  Facing: %d diffx#y#z %d#%d#%d\n",ptr->index, ptr->curX, ptr-> curY, ptr->curZ, ptr->type, ptr->facing, ptr->diffX, ptr->diffY, ptr->diffZ);
-   if(checkIfOutOfBounds(BOUNDS,BOUNDS,BOUNDS)){
-      pop();
-      #ifdef DEBUG
-      printf("\b\b\b");
-      #endif
-      return 1;
-
-   }
-
    int currentBlock = inputSnake[inputIndex];
-/*
-   if(inputSnake[inputIndex]==3){
-      printf("end of input###############################################################");
-      return 1;
-   }
-   */
-   //printf("head facing: %d current index %d current block: %d\n", head->facing,inputIndex,inputSnake[inputIndex]);
-   //inputIndex++;
+
    if(head->type==1){//striaght block
       switch(head->facing){
          case 1:
-            //if(head->diffZ+1>BOUNDS){return 1;}
-            tryToPush(ptr, 0, 0, 1, head->facing, currentBlock);
+            tryToPushZ(ptr, 1, head->facing, currentBlock);
          break;
          case 2:
- //           if(head->diffY+1>BOUNDS){return 1;}
-            tryToPush(ptr, 0, 1, 0, head->facing, currentBlock);
+            tryToPushY(ptr, 1, head->facing, currentBlock);
          break;
          case 3:
-   //         if(head->diffX+1>BOUNDS){return 1;}
-            tryToPush(ptr, 1, 0, 0, head->facing, currentBlock);
+            tryToPushX(ptr, 1, head->facing, currentBlock);
          break;
          case 4:
-   //         if(head->diffZ+1>BOUNDS){return 1;}
-            tryToPush(ptr, 0, 0, -1, head->facing, currentBlock);
+            tryToPushZ(ptr, -1, head->facing, currentBlock);
          break;
          case 5:
-    //        if(head->diffY+1>BOUNDS){return 1;}
-            tryToPush(ptr, 0, -1, 0, head->facing, currentBlock);
+            tryToPushY(ptr, -1, head->facing, currentBlock);
          break;
          case 6:
-     //       if(head->diffX+1>BOUNDS){return 1;}
-            tryToPush(ptr, -1, 0, 0, head->facing, currentBlock);
+            tryToPushX(ptr, -1, head->facing, currentBlock);
          break;
       }
    }else if(head->type==2){
       switch(head->facing){
          case 1:
-            tryToPush(ptr, 0, 1, 0, 2, currentBlock);
-            tryToPush(ptr, 1, 0, 0, 3, currentBlock);
-            tryToPush(ptr, 0, -1, 0, 5, currentBlock);
-            tryToPush(ptr, -1, 0, 0, 6, currentBlock);
+            tryToPushY(ptr, 1, 2, currentBlock);
+            tryToPushX(ptr, 1, 3, currentBlock);
+            tryToPushY(ptr, -1, 5, currentBlock);
+            tryToPushX(ptr, -1, 6, currentBlock);
          break;
          case 2:
-            tryToPush(ptr, 0, 0, 1, 1, currentBlock);
-            tryToPush(ptr, 1, 0, 0, 3, currentBlock);
-            tryToPush(ptr, 0, 0, -1, 4, currentBlock);
-            tryToPush(ptr, -1, 0, 0, 6, currentBlock);
+            tryToPushZ(ptr, 1, 1, currentBlock);
+            tryToPushX(ptr, 1, 3, currentBlock);
+            tryToPushZ(ptr, -1, 4, currentBlock);
+            tryToPushX(ptr, -1, 6, currentBlock);
          break;
          case 3:
-            tryToPush(ptr, 0, 0, 1, 1, currentBlock);
-            tryToPush(ptr, 0, 1, 0, 2, currentBlock);
-            tryToPush(ptr, 0, 0, -1, 4, currentBlock);
-            tryToPush(ptr, 0, -1, 0, 5, currentBlock);
+            tryToPushZ(ptr, 1, 1, currentBlock);
+            tryToPushY(ptr, 1, 2, currentBlock);
+            tryToPushZ(ptr, -1, 4, currentBlock);
+            tryToPushY(ptr, -1, 5, currentBlock);
          break;
          case 4:
-            tryToPush(ptr, 0, 1, 0, 2, currentBlock);
-            tryToPush(ptr, 1, 0, 0, 3, currentBlock);
-            tryToPush(ptr, 0, -1, 0, 5, currentBlock);
-            tryToPush(ptr, -1, 0, 0, 6, currentBlock);
+            tryToPushY(ptr, 1, 2, currentBlock);
+            tryToPushX(ptr, 1, 3, currentBlock);
+            tryToPushY(ptr, -1, 5, currentBlock);
+            tryToPushX(ptr, -1, 6, currentBlock);
          break;
          case 5:
-            tryToPush(ptr, 0, 0, 1, 1, currentBlock);
-            tryToPush(ptr, 1, 0, 0, 3, currentBlock);
-            tryToPush(ptr, 0, 0, -1, 4, currentBlock);
-            tryToPush(ptr, -1, 0, 0, 6, currentBlock);
+            tryToPushZ(ptr, 1, 1, currentBlock);
+            tryToPushX(ptr, 1, 3, currentBlock);
+            tryToPushZ(ptr, -1, 4, currentBlock);
+            tryToPushX(ptr, -1, 6, currentBlock);
          break;
          case 6:
-            tryToPush(ptr, 0, 0, 1, 1, currentBlock);
-            tryToPush(ptr, 0, 1, 0, 2, currentBlock);
-            tryToPush(ptr, 0, 0, -1, 4, currentBlock);
-            tryToPush(ptr, 0, -1, 0, 5, currentBlock);
+            tryToPushZ(ptr, 1, 1, currentBlock);
+            tryToPushY(ptr, 1, 2, currentBlock);
+            tryToPushZ(ptr, -1, 4, currentBlock);
+            tryToPushY(ptr, -1, 5, currentBlock);
          break;
       }
-
    }
    
    if(globLength!=VOLOUM){
@@ -341,10 +470,31 @@ int solve(){
       #endif
       return 1;
    }
-
    return 0;
+}
 
+void printMovesInteractiv(){
+   printf("\nPress enter for next move\n");
+   reverse(&head);
+   struct node *ptr = head;
+   while(ptr->next != NULL) {
+      int xdiff = ptr->next->curX - ptr->curX;
+      int ydiff = ptr->next->curY - ptr->curY;
+      int zdiff = ptr->next->curZ - ptr->curZ;
 
+      if(xdiff==1){printf("x+ ");}
+      else if(xdiff==-1){printf("x- ");}
+      else if(ydiff==1){printf("y+ ");}
+      else if(ydiff==-1){printf("y- ");}
+      else if(zdiff==1){printf("z+ ");}
+      else if(zdiff==-1){printf("z- ");}
+      ptr = ptr->next;
+
+      getchar();
+      printf("\n\n\n");
+   }
+   reverse(&head);
+   printf("\n");
 }
 
 void printMoves(){
@@ -379,9 +529,13 @@ int main() {
    push(0,0,0,1,1);
 
    inputIndex=1;
+   printf("\nSolving...\n");
+
    solve();
-   printf("\n\n\n");
-   //printListRev();
+   printf("\nDone\n");
+   printf("visitedNodes: %lu",visitedNodes);
+
+   printListRev();
    //printf("bounds: %d\n",checkIfOutOfBounds(BOUNDS,BOUNDS,BOUNDS));
    //printf("indexCounter: %d",inputIndex);
    printMoves();  
